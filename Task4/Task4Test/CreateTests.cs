@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Exceptions.Exeptions;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using MockQueryable.Moq;
 using Moq;
@@ -9,27 +10,36 @@ using Task4.Mapper;
 using Task4.Models;
 using Task4.Repositories.Interfaces;
 using Task4.Services;
+using Task4.Services.Interfaces;
 using Task4.Validator;
 
 namespace Task4Test
 {
     public class CreateTests
     {
-        [Fact]
-        public async Task CreateUser_ReturnsOkResult()
-        {
-            var repositoryMock = new Mock<IUserRepository>();
+        private readonly Mock<IUserRepository> _repositoryMock;
+        private readonly MapperConfiguration _mapperConfig;
+        private readonly IMapper _mapper;
+        private readonly IUserService _userService;
+        private readonly UsersController _controller;
+        private readonly AbstractValidator<NewUserDTO> _validator;
 
-            var mapperConfig = new MapperConfiguration(mc =>
+        public CreateTests()
+        {
+            _repositoryMock = new Mock<IUserRepository>();
+            _mapperConfig = new MapperConfiguration(mc =>
             {
                 mc.AddProfile(new UserProfile());
             });
+            _mapper = _mapperConfig.CreateMapper();
+            _userService = new UserService(_repositoryMock.Object, _mapper);
+            _controller = new UsersController(_userService);
+            _validator = new NewUserDTOValidator();
+        }
 
-            IMapper mapper = mapperConfig.CreateMapper();
-
-            var useCaseServices = new UserService(repositoryMock.Object, mapper);
-            var controller = new UsersController(useCaseServices);
-
+        [Fact]
+        public async Task CreateUser_ReturnsOkResult()
+        {
             var expectedOutput = new List<User>
             {
                 new User { Id = 1, FirstName = "Sima", LastName = "Simic", Telephone = "+381 11 123 45 67" },
@@ -38,11 +48,11 @@ namespace Task4Test
 
             var mockOutput = expectedOutput.AsQueryable().BuildMock();
 
-            repositoryMock.Setup(x => x.GetAll())
+            _repositoryMock.Setup(x => x.GetAll())
                 .Returns(mockOutput);
 
             // Act
-            var result = await controller.Create(new NewUserDTO
+            var result = await _controller.Create(new NewUserDTO
             {
                 FirstName = "George",
                 LastName = "Johanson",
@@ -60,18 +70,6 @@ namespace Task4Test
         [Fact]
         public async Task CreateUserWithExistingTelephone_ReturnsNotFound()
         {
-            var repositoryMock = new Mock<IUserRepository>();
-
-            var mapperConfig = new MapperConfiguration(mc =>
-            {
-                mc.AddProfile(new UserProfile());
-            });
-
-            IMapper mapper = mapperConfig.CreateMapper();
-
-            var useCaseServices = new UserService(repositoryMock.Object, mapper);
-            var controller = new UsersController(useCaseServices);
-
             var expectedOutput = new List<User>
             {
                 new User { Id = 1, FirstName = "Sima", LastName = "Simic", Telephone = "+381 11 123 45 67" },
@@ -80,13 +78,13 @@ namespace Task4Test
 
             var mockOutput = expectedOutput.AsQueryable().BuildMock();
 
-            repositoryMock.Setup(x => x.GetAll())
+            _repositoryMock.Setup(x => x.GetAll())
                 .Returns(mockOutput);
 
             // Act
             async Task Action()
             {
-                await controller.Create(new NewUserDTO
+                await _controller.Create(new NewUserDTO
                 {
                     FirstName = "George",
                     LastName = "Johanson",
@@ -121,7 +119,6 @@ namespace Task4Test
         public async Task CreateUser_EmptyLarstName()
         {
             // Arrange
-            var validator = new NewUserDTOValidator();
             var request = new NewUserDTO
             {
                 FirstName = "George",
@@ -130,7 +127,7 @@ namespace Task4Test
             };
 
             // Act
-            var validationResult = await validator.ValidateAsync(request);
+            var validationResult = await _validator.ValidateAsync(request);
 
             // Assert
             Assert.False(validationResult.IsValid);
@@ -140,7 +137,6 @@ namespace Task4Test
         public async Task CreateUser_EmptyPhone()
         {
             // Arrange
-            var validator = new NewUserDTOValidator();
             var request = new NewUserDTO
             {
                 FirstName = "George",
@@ -149,7 +145,7 @@ namespace Task4Test
             };
 
             // Act
-            var validationResult = await validator.ValidateAsync(request);
+            var validationResult = await _validator.ValidateAsync(request);
 
             // Assert
             Assert.False(validationResult.IsValid);
@@ -159,7 +155,6 @@ namespace Task4Test
         public async Task CreateUser_BadFormatPhone()
         {
             // Arrange
-            var validator = new NewUserDTOValidator();
             var request = new NewUserDTO
             {
                 FirstName = "George",
@@ -168,7 +163,7 @@ namespace Task4Test
             };
 
             // Act
-            var validationResult = await validator.ValidateAsync(request);
+            var validationResult = await _validator.ValidateAsync(request);
 
             // Assert
             Assert.False(validationResult.IsValid);
