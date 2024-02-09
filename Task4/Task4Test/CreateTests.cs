@@ -40,6 +40,7 @@ namespace Task4Test
         [Fact]
         public async Task CreateUser_ReturnsOkResult()
         {
+            // Arrange
             var expectedOutput = new List<User>
             {
                 new User { Id = 1, FirstName = "Sima", LastName = "Simic", Telephone = "+381 11 123 45 67" },
@@ -70,6 +71,7 @@ namespace Task4Test
         [Fact]
         public async Task CreateUserWithExistingTelephone_ReturnsNotFound()
         {
+            // Arrange
             var expectedOutput = new List<User>
             {
                 new User { Id = 1, FirstName = "Sima", LastName = "Simic", Telephone = "+381 11 123 45 67" },

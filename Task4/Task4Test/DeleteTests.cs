@@ -33,6 +33,7 @@ namespace Task4Test
         [Fact]
         public async Task DeleteUser_ReturnsOkResult()
         {
+            // Arrange
             var expectedOutput = new User
             {
                 Id = 1,
@@ -58,6 +59,7 @@ namespace Task4Test
         [Fact]
         public async Task DeleteUser_ReturnsNotFound()
         {
+            // Arrange
             _repositoryMock.Setup(x => x.FindAsync(1))
                 .Returns(Task.FromResult<User?>(null));
 

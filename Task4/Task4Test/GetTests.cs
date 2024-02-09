@@ -40,6 +40,7 @@ namespace Task4Test
         [Fact]
         public async Task GetUsers_ReturnsOkResult()
         {
+            // Arrange
             var expectedOutput = new List<User>
             {
                 new User { Id = 1, FirstName = "Sima", LastName = "Simic", Telephone = "+381 11 123 45 67" },
@@ -69,6 +70,7 @@ namespace Task4Test
         [Fact]
         public async Task GetUserById_ReturnsOkResult()
         {
+            // Arrange
             var expectedOutput = new User
             {
                 Id = 1,
@@ -97,6 +99,7 @@ namespace Task4Test
         [Fact]
         public async Task GetUserById_ReturnsNotFound()
         {
+            // Arrange
             _repositoryMock.Setup(x => x.FindAsync(1))
                 .Returns(Task.FromResult<User?>(null));
 
